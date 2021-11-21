@@ -98,7 +98,7 @@ app.post("/insertshorturl",async function(req,res){
    try {
        // Connect to the MongoDB cluster
        var obj=req.body;
-       console.log(req.body);
+       
 
         if(req.body.choicetype===0){
         await updatecounter(client,obj);
@@ -118,13 +118,13 @@ app.post("/insertshorturl",async function(req,res){
     else{
        
         const cursor = await client.db("Urldatabase").collection("Urltable").findOne({"shorturl":req.body.chosenshorturl});
-        console.log("hiiii");
+      
         if(cursor!=null)
         {
-            console.log("duplicate");
+            
             var ans={output:0};
             ans=JSON.stringify(ans);
-            console.log(ans);
+           
             res.send(ans);
             
            
@@ -178,7 +178,7 @@ app.post("/signup",async function(req,res){
          };
         
          const result = await client.db("Urldatabase").collection("Users").insertOne(document);
-         console.log(result);
+         
          
     } catch (e) {
         console.error(e);
@@ -240,12 +240,12 @@ app.post("/signup",async function(req,res){
             console.log("1 document updated");
           
           });
-        console.log(re);
+
         var result={longurl:""}
-        console.log("inside post");
-        console.log(cursor);
+       
+      
         if(cursor!=null){
-            console.log("inside if");
+           
         result.longurl=cursor["longurl"];
         result=JSON.stringify(result);
        
@@ -274,7 +274,13 @@ app.post("/signup",async function(req,res){
 
  app.post("/gettable",async function(req,res){
     await client.connect();
-
+    
+    console.log(req.socket.remoteAddress);
+    document={
+        "ip":req.socket.remoteAddress
+    }
+    const result = await client.db("Urldatabase").collection("statistics").insertOne(document);
+    console.log(result);
     const uri = "mongodb+srv://Suriyaa:mthaniga@cluster0.rsh4e.mongodb.net/myFirstDatabase?retryWrites=true&w=majority";
   
   
@@ -287,7 +293,7 @@ app.post("/signup",async function(req,res){
 
       
 
-       console.log(arr);
+       
         res.send(arr);
         
        
