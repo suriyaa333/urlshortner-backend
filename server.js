@@ -317,18 +317,7 @@ app.post("/signup",async function(req,res){
  })
 
 
- app.get("/",async function(req,res){
-    await client.connect();
-    let ip = req.headers['x-forwarded-for'] || req.connection.remoteAddress || req.socket.remoteAddress
-    console.log(ip);
-    document={
-        "ip":ip
-    }
-    const result = await client.db("Urldatabase").collection("statistics").insertOne(document);
-    res.send(<h1>hi</h1>);
-   
-   
- })
+
 app.listen(process.env.PORT||8000,async function(){
 console.log("listening");
 });
