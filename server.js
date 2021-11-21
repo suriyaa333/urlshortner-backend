@@ -63,7 +63,7 @@ app.post("/",async function(req,res){
 
 //    console.log(req.headers['user-agent']);
 
-   console.log(req.socket.remoteAddress);
+   //console.log(req.socket.remoteAddress);
     try {
         // Connect to the MongoDB cluster
        
@@ -90,15 +90,17 @@ app.post("/",async function(req,res){
    
 app.post("/insertshorturl",async function(req,res){
 
-   var obj=req.body;
+  
    
    const uri = "mongodb+srv://Suriyaa:mthaniga@cluster0.rsh4e.mongodb.net/myFirstDatabase?retryWrites=true&w=majority";
 
   
    try {
        // Connect to the MongoDB cluster
-      
+       var obj=req.body;
+        if(req.body.choicetype===0){
         await updatecounter(client,obj);
+        
         var document={
             username:obj.username,
             longurl:obj.longurl,
@@ -106,6 +108,43 @@ app.post("/insertshorturl",async function(req,res){
             click:0
         };
         await createListings(client, document);
+        var ans={output:1};
+        ans=JSON.stringify(ans);
+            
+        res.send(ans);
+         }
+    else{
+       
+        const cursor = await client.db("Urldatabase").collection("Urltable").find({"shorturl":req.body.chosenshorturl});
+        console.log("hiiii");
+        if(cursor===null)
+        {
+            var obj=req.body;
+            var document={
+            username:obj.username,
+            longurl:obj.longurl,
+            shorturl:obj.chosenshorturl,
+            click:0
+            };
+            await createListings(client, document);
+            var ans={output:1};
+            ans=JSON.stringify(ans);
+
+            res.send(ans);
+        }
+        else{
+            console.log("duplicate");
+            var ans={output:0};
+            ans=JSON.stringify(ans);
+            console.log(ans);
+            res.send(ans);
+        }
+
+        
+       
+
+
+    }
 
 
    } catch (e) {
@@ -116,11 +155,6 @@ app.post("/insertshorturl",async function(req,res){
    
    }
  
-  
-
-
-
-
 })
 
 
@@ -150,9 +184,6 @@ app.post("/signup",async function(req,res){
     
     }
    
- 
-  
- 
  })
 
  app.post("/login",async function(req,res){
@@ -186,9 +217,6 @@ app.post("/signup",async function(req,res){
     
     }
    
- 
-  
- 
  })
  app.post("/search",async function(req,res){
     await client.connect();
@@ -199,6 +227,16 @@ app.post("/signup",async function(req,res){
     try {
         var shorturl=req.body.shorturl;
         const cursor = await client.db("Urldatabase").collection("Urltable").findOne({"shorturl":shorturl});
+        var myquery = {"shorturl":shorturl};
+        var clicks=cursor["click"];
+        clicks=clicks+1;
+        var newvalues = { $set: {click:clicks } };
+        const re=await client.db("Urldatabase").collection("Urltable").updateOne(myquery, newvalues, function(err, res) {
+            if (err) throw err;
+            console.log("1 document updated");
+          
+          });
+        console.log(re);
         var result={longurl:""}
         console.log("inside post");
         console.log(cursor);
@@ -209,7 +247,7 @@ app.post("/signup",async function(req,res){
        
       
 
-       console.log(result);
+     
         res.send(result);
         }
         else{
@@ -227,24 +265,49 @@ app.post("/signup",async function(req,res){
     
     }
    
- 
-  
- 
  })
+
+
+ app.post("/gettable",async function(req,res){
+    await client.connect();
+
+    const uri = "mongodb+srv://Suriyaa:mthaniga@cluster0.rsh4e.mongodb.net/myFirstDatabase?retryWrites=true&w=majority";
+  
+  
+    try {
+        console.log
+        const cursor = await client.db("Urldatabase").collection("Urltable").find({"username":req.body.username});
+
+        var arr= await cursor.toArray();
+       arr=JSON.stringify(arr);
+
+      
+
+       console.log(arr);
+        res.send(arr);
+        
+       
+
+         
+    } catch (e) {
+        console.error(e);
+    } finally {
+        // Close the connection to the MongoDB cluster
+       //  await client.close();
+    
+    }
+   
+ })
+
 
 app.listen(process.env.PORT||8000,async function(){
 console.log("listening");
 });
 
 
-
-
-
-
-
 async function Findone(client,username){
     const cursor = await client.db("Urldatabase").collection("Users").findOne({"username":username});
-   console.log(cursor);
+   
    return cursor;
 }
 
@@ -276,7 +339,7 @@ async function updatecounter(client,obj){
     var myquery = { _id:1 };
     const cursor = await client.db("Urldatabase").collection("Counters").find();
     const arr= await cursor.toArray();
-    console.log(obj.userchoice);
+   
     if(obj.userchoice=="A")
     {
       
@@ -309,7 +372,7 @@ async function updatecounter(client,obj){
         var newvalues = { $set: {CounterC:currvalue } };
         const result= await client.db("Urldatabase").collection("Counters").updateOne(myquery, newvalues, function(err, res) {
             if (err) throw err;
-            console.log("1 document updated");
+           
           
           });
     }
