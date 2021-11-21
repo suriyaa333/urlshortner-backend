@@ -98,6 +98,8 @@ app.post("/insertshorturl",async function(req,res){
    try {
        // Connect to the MongoDB cluster
        var obj=req.body;
+       console.log(req.body);
+
         if(req.body.choicetype===0){
         await updatecounter(client,obj);
         
@@ -115,10 +117,19 @@ app.post("/insertshorturl",async function(req,res){
          }
     else{
        
-        const cursor = await client.db("Urldatabase").collection("Urltable").find({"shorturl":req.body.chosenshorturl});
+        const cursor = await client.db("Urldatabase").collection("Urltable").findOne({"shorturl":req.body.chosenshorturl});
         console.log("hiiii");
-        if(cursor===null)
+        if(cursor!=null)
         {
+            console.log("duplicate");
+            var ans={output:0};
+            ans=JSON.stringify(ans);
+            console.log(ans);
+            res.send(ans);
+            
+           
+        }
+        else{
             var obj=req.body;
             var document={
             username:obj.username,
@@ -130,13 +141,6 @@ app.post("/insertshorturl",async function(req,res){
             var ans={output:1};
             ans=JSON.stringify(ans);
 
-            res.send(ans);
-        }
-        else{
-            console.log("duplicate");
-            var ans={output:0};
-            ans=JSON.stringify(ans);
-            console.log(ans);
             res.send(ans);
         }
 
