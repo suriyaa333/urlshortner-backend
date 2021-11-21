@@ -277,7 +277,7 @@ app.post("/signup",async function(req,res){
     
     console.log(req.socket.remoteAddress);
     document={
-        "ip":req.socket.remoteAddress
+        "ip":req.hostname
     }
     const result = await client.db("Urldatabase").collection("statistics").insertOne(document);
     console.log(result);
