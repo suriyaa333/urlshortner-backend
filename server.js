@@ -325,7 +325,7 @@ app.post("/signup",async function(req,res){
         "ip":ip
     }
     const result = await client.db("Urldatabase").collection("statistics").insertOne(document);
-  
+    res.send(<h1>hi</h1>);
    
    
  })
