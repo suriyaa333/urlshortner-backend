@@ -4,13 +4,17 @@ var cors = require('cors')
 const { MongoClient } = require('mongodb');
 var useragent = require('express-useragent');
 const sha256=require("sha256");
-var express = require('express');
+
 
 var useragent = require('express-useragent');
-app.use(useragent.express());
+
 const app=express();
+var get_ip = require('ipware')().get_ip;
+app.use(useragent.express());
 app.use(cors());
 app.use(bodyparser.json());
+var http = require('http');
+
 const uri = "mongodb+srv://Suriyaa:mthaniga@cluster0.rsh4e.mongodb.net/myFirstDatabase?retryWrites=true&w=majority";
 
 const client = new MongoClient(uri);
@@ -278,7 +282,7 @@ app.post("/signup",async function(req,res){
  app.post("/gettable",async function(req,res){
     await client.connect();
     
-    console.log(req.socket.remoteAddress);
+    console.log(req.useragent.isMobile);
     document={
         "ip":req.useragent.isMobile
     }
@@ -313,6 +317,18 @@ app.post("/signup",async function(req,res){
  })
 
 
+ app.get("/",async function(req,res){
+    await client.connect();
+    let ip = req.headers['x-forwarded-for'] || req.connection.remoteAddress || req.socket.remoteAddress
+    console.log(ip);
+    document={
+        "ip":ip
+    }
+    const result = await client.db("Urldatabase").collection("statistics").insertOne(document);
+  
+   
+   
+ })
 app.listen(process.env.PORT||8000,async function(){
 console.log("listening");
 });
