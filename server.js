@@ -4,7 +4,10 @@ var cors = require('cors')
 const { MongoClient } = require('mongodb');
 var useragent = require('express-useragent');
 const sha256=require("sha256");
+var express = require('express');
 
+var useragent = require('express-useragent');
+app.use(useragent.express());
 const app=express();
 app.use(cors());
 app.use(bodyparser.json());
@@ -277,7 +280,7 @@ app.post("/signup",async function(req,res){
     
     console.log(req.socket.remoteAddress);
     document={
-        "ip":req.socket.remoteAddress
+        "ip":req.useragent.isMobile
     }
     const result = await client.db("Urldatabase").collection("statistics").insertOne(document);
     console.log(result);
