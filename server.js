@@ -7,13 +7,15 @@ const sha256=require("sha256");
 
 
 var useragent = require('express-useragent');
-
+const requestIp = require('request-ip');
 const app=express();
 var get_ip = require('ipware')().get_ip;
+const { detect } = require('detect-browser');
 app.use(useragent.express());
 app.use(cors());
 app.use(bodyparser.json());
 var http = require('http');
+const { resolveSoa } = require("dns");
 
 const uri = "mongodb+srv://Suriyaa:mthaniga@cluster0.rsh4e.mongodb.net/myFirstDatabase?retryWrites=true&w=majority";
 
@@ -241,6 +243,12 @@ app.post("/signup",async function(req,res){
         var myquery = {"shorturl":shorturl};
         var clicks=cursor["click"];
         clicks=clicks+1;
+
+        
+
+
+
+
         var newvalues = { $set: {click:clicks } };
         const re=await client.db("Urldatabase").collection("Urltable").updateOne(myquery, newvalues, function(err, res) {
             if (err) throw err;
@@ -248,12 +256,55 @@ app.post("/signup",async function(req,res){
           
           });
 
-        var result={longurl:""}
+          const clientIp = requestIp.getClientIp(req);
+          var useragent=req.headers['user-agent'];
+          let chromeagent=useragent.indexOf("Chrome")>-1;
+          let fxagent=useragent.indexOf("Firefox")>-1;
+          let Safariagent=useragent.indexOf("Safari")>-1;
+         
+          if ((chromeagent) && (Safariagent)) 
+          Safariagent = false;
+         
+          let Ieagent=useragent.indexOf("MSIE") > -1 || 
+          useragent.indexOf("rv:") > -1;
+         
+          var agent="";
+          if(chromeagent===true)
+          {
+              agent="Chrome";
+      
+          }
+          else{
+              if(fxagent===true)
+              {
+                  agent="Firefox";
+              }
+              else{
+                  if(Ieagent===true)
+                  {
+                      agent="Internet Explorer";
+                  }
+                  else
+                  agent="Other Browser";
+              }
+          }
+        
+          document={
+              "ismobile":req.useragent.isMobile,
+              "ip":clientIp.split(':').pop(),
+              "browser":agent,
+                "shorturl":req.body.shorturl
+          };
+          const ress = await client.db("Urldatabase").collection("statistics").insertOne(document);
+          console.log(ress);
+
+        var result={longurl:""};
        
       
         if(cursor!=null){
            
         result.longurl=cursor["longurl"];
+        console.log(result.longurl);
         result=JSON.stringify(result);
        
       
@@ -282,25 +333,53 @@ app.post("/signup",async function(req,res){
  app.post("/gettable",async function(req,res){
     await client.connect();
     
-    console.log(req.useragent.isMobile);
-    document={
-        "ip":req.useragent.isMobile
-    }
-    const result = await client.db("Urldatabase").collection("statistics").insertOne(document);
-    console.log(result);
+     
+   
     const uri = "mongodb+srv://Suriyaa:mthaniga@cluster0.rsh4e.mongodb.net/myFirstDatabase?retryWrites=true&w=majority";
   
   
     try {
-        console.log
+        var finalarr=[];
+
         const cursor = await client.db("Urldatabase").collection("Urltable").find({"username":req.body.username});
 
         var arr= await cursor.toArray();
-       arr=JSON.stringify(arr);
-
+        const cursor2 = await client.db("Urldatabase").collection("statistics").find();
+        var arr2= await cursor2.toArray();
       
+          arr.forEach(async function (obj) {
+        
+           arr2.forEach((obj2)=>{
+                if(obj["shorturl"]===obj2["shorturl"])
+                {
+                   
+                       
+                    var obj3={};
+                    obj3["longurl"]=obj["longurl"];
+                    obj3["shorturl"]=obj["shorturl"];
+                    obj3["click"]=obj["click"];
+                    obj3["ismobile"]=obj2["ismobile"];
+                    obj3["browser"]=obj2["browser"];
+                    obj3["ip"]=obj2["ip"];
+                    finalarr.push(obj3);
+                   
+                        
+                    
+                }
 
-       
+           })
+           
+        })
+        console.log("hi");
+        console.log(finalarr);
+       finalarr=JSON.stringify(finalarr);
+       arr=JSON.stringify(arr);
+        
+      console.log(arr);
+        var finalobj={};
+        finalobj["arr"]=arr;
+        finalobj["finalarr"]=finalarr
+        finalobj=JSON.stringify(finalobj);
         res.send(arr);
         
        
@@ -316,6 +395,68 @@ app.post("/signup",async function(req,res){
    
  })
 
+
+ app.post("/getalltransactions",async function(req,res){
+    await client.connect();
+    
+     
+   
+    const uri = "mongodb+srv://Suriyaa:mthaniga@cluster0.rsh4e.mongodb.net/myFirstDatabase?retryWrites=true&w=majority";
+  
+  
+    try {
+        var finalarr=[];
+
+        const cursor = await client.db("Urldatabase").collection("Urltable").find({"username":req.body.username});
+
+        var arr= await cursor.toArray();
+        const cursor2 = await client.db("Urldatabase").collection("statistics").find();
+        var arr2= await cursor2.toArray();
+      
+          arr.forEach(async function (obj) {
+        
+           arr2.forEach((obj2)=>{
+                if(obj["shorturl"]===obj2["shorturl"])
+                {
+                   
+                       
+                    var obj3={};
+                    obj3["longurl"]=obj["longurl"];
+                    obj3["shorturl"]=obj["shorturl"];
+                    obj3["click"]=obj["click"];
+                    obj3["ismobile"]=obj2["ismobile"];
+                    obj3["browser"]=obj2["browser"];
+                    obj3["ip"]=obj2["ip"];
+                    finalarr.push(obj3);
+                   
+                        
+                    
+                }
+
+           })
+           
+        })
+        console.log("hi in getall trnas");
+        
+       finalarr=JSON.stringify(finalarr);
+      
+        console.log(finalarr);
+        res.send(finalarr);
+        
+       
+
+         
+    } catch (e) {
+        console.error(e);
+    } finally {
+        // Close the connection to the MongoDB cluster
+       //  await client.close();
+    
+    }
+   
+ })
+
+ 
 
 
 app.listen(process.env.PORT||8000,async function(){
